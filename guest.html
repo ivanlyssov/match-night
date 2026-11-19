@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Голос гостя · Быстрые свидания</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--mag:#A31551;--dark:#4A0221;--sky:#61CFFF;--coral:#FC9385}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;font-family:Montserrat,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:500;color:#fff;
+  background:linear-gradient(160deg,#4A0221 0%,#7a0d3b 55%,#A31551 100%) fixed;padding:max(18px,env(safe-area-inset-top)) 16px 28px}
+.wrap{max-width:460px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--coral)}
+h1{font-size:27px;line-height:1.12;font-weight:800;margin:6px 0 4px}
+h2{font-size:15px;font-weight:800;margin:0 0 4px;letter-spacing:.08em;text-transform:uppercase;color:var(--sky)}
+p{margin:6px 0;line-height:1.4;color:rgba(255,255,255,.86);font-size:15px}
+.card{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:14px;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.pk{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.22);border-radius:13px;padding:11px 10px;color:#fff;font:inherit;font-weight:700;font-size:15px;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk small{font-weight:800;opacity:.6;margin-right:6px}
+.pk.on{background:#fff;color:var(--dark);border-color:#fff}
+.btn{appearance:none;border:0;border-radius:14px;font:inherit;font-weight:700;font-size:16px;padding:15px 14px;width:100%;background:var(--coral);color:#3a0118;cursor:pointer;margin-top:14px}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4)}
+.big{background:#fff;color:var(--dark);border-radius:16px;padding:16px;margin-top:12px;font-weight:800;font-size:20px;text-align:center}
+.err{background:rgba(252,147,133,.2);border:1px solid var(--coral);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="eyebrow">Голос гостя</div><h1>Загружаем…</h1></div>
+<script>
+(function(){
+var SB='https://dxbhhxygngafdlwdcrer.supabase.co',KEY='sb_publishable_gtUpyVchUHYjEgd9ZwDFIA_1dh9APc-';
+var CODE=(new URLSearchParams(location.search).get('g')||'fa6f8f').toLowerCase().replace(/[^a-z0-9]/g,'');
+function tok(){var k='sd_gtok_'+CODE,t=null;try{t=localStorage.getItem(k);}catch(e){}
+  if(!t){t=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('g'+Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2));try{localStorage.setItem(k,t);}catch(e){}}return t;}
+var TOKEN=tok(),D=null,ui={m:null,w:null,edit:false,err:'',busy:false},last='',app=document.getElementById('app');
+function rpc(a){a.p_code=CODE;a.p_token=TOKEN;return fetch(SB+'/rest/v1/rpc/sd_guest',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(a)}).then(function(r){if(!r.ok)throw 0;return r.json();});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function nm(list,n,l){var o=(list||[])[n-1];return (o&&o.name)?o.name:(l+n);}
+function html(){
+  if(!D)return '<div class="eyebrow">Голос гостя</div><h1>Загружаем…</h1>';
+  if(D.error==='nogame')return '<div class="eyebrow">Голос гостя</div><h1>Игра не найдена</h1>';
+  var h='<div class="eyebrow">Приз зрительских симпатий</div>',my=D.my,open=D.game.guest_open;
+  if(my&&!ui.edit){
+    h+='<h1>Ваш голос принят</h1><div class="big">'+esc(nm(D.men,my.m,'М'))+' + '+esc(nm(D.women,my.w,'Ж'))+'</div>';
+    h+=open?'<button class="btn ghost" id="edit">Изменить выбор</button><p>Передумали — можно поменять, пока голосование открыто.</p>':'<p>Голосование завершено. Спасибо!</p>';
+    return h;
+  }
+  if(!open)return h+'<h1>Голосование завершено</h1><p>Спасибо, что были с нами!</p>';
+  h+='<h1>Кто лучшая пара вечера?</h1><p>Выберите мужчину и женщину, которые, по-вашему, подходят друг другу больше всех. Один гость — один голос.</p>';
+  [['m','Он',D.men,'М'],['w','Она',D.women,'Ж']].forEach(function(x){
+    h+='<div class="card"><h2>'+x[1]+'</h2><div class="grid">';
+    (x[2]||[]).forEach(function(o){h+='<button class="pk'+(ui[x[0]]===o.num?' on':'')+'" data-'+x[0]+'="'+o.num+'"><small>'+x[3]+o.num+'</small>'+esc(o.name||'')+'</button>';});
+    h+='</div></div>';
+  });
+  if(ui.err)h+='<div class="err">'+esc(ui.err)+'</div>';
+  h+='<button class="btn" id="send"'+((ui.m&&ui.w&&!ui.busy)?'':' disabled')+'>'+((ui.m&&ui.w)?'Голосую: '+esc(nm(D.men,ui.m,'М'))+' + '+esc(nm(D.women,ui.w,'Ж')):'Выберите его и её')+'</button>';
+  return h;
+}
+function render(){var s=html();if(s===last)return;last=s;var y=window.scrollY;app.innerHTML=s;window.scrollTo(0,y);}
+function load(){return rpc({}).then(function(d){D=d;render();}).catch(function(){});}
+app.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t)return;
+  if(t.dataset.m){ui.m=+t.dataset.m;ui.err='';render();return;}
+  if(t.dataset.w){ui.w=+t.dataset.w;ui.err='';render();return;}
+  if(t.id==='edit'){ui.edit=true;ui.m=D.my.m;ui.w=D.my.w;render();return;}
+  if(t.id==='send'){
+    ui.busy=true;render();
+    rpc({p_m:ui.m,p_w:ui.w}).then(function(d){ui.busy=false;D=d;if(d.error)ui.err=d.error==='closed'?'Голосование уже закрыто.':'Не получилось. Попробуйте ещё раз.';else ui.edit=false;render();})
+      .catch(function(){ui.busy=false;ui.err='Нет связи. Попробуйте ещё раз.';render();});
+  }
+});
+load();setInterval(function(){if(!document.hidden&&!ui.busy)load();},6000);
+})();
+</script>
+</body>
+</html>

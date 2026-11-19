@@ -38,6 +38,7 @@ button.x{padding:2px 8px;font-size:12px;border-color:rgba(255,255,255,.2);color:
 .hint{background:rgba(97,207,255,.14);border:1px solid var(--sky);border-radius:12px;padding:12px 14px;margin-top:10px;font-weight:600;line-height:1.4}
 .muted{color:rgba(255,255,255,.6);font-size:13px}
 .stat{font-size:14px;font-weight:700}
+select{font:inherit;font-weight:700;font-size:14px;padding:9px 10px;border-radius:12px;border:1.5px solid rgba(255,255,255,.35);background:#3a0118;color:#fff}
 input{font:inherit;font-size:18px;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;width:180px}
 </style>
 </head>
@@ -95,6 +96,22 @@ function html(){
   c.pairs.forEach(function(p){
     h+='<div class="pair s'+p.rs.length+'"><span>'+who(c,'m',p.m)+' + '+who(c,'w',p.w)+'</span><span class="sc">'+p.rs.length+' из 3 <small>· круги '+p.rs.join(', ')+'</small></span></div>';
   });
+  h+='</div><div class="card"><h2>Приз зрительских симпатий · голоса гостей</h2>';
+  var G=D.guests||[],gt=0,wm=g.win_m,ww=g.win_w;G.forEach(function(x){gt+=x.n;});
+  h+='<div class="btns" style="align-items:center"><span>Победитель супер-мэтча:</span><select id="winm"><option value="0">он —</option>';
+  for(i=1;i<=N;i++)h+='<option value="'+i+'"'+(wm===i?' selected':'')+'>'+who(c,'m',i)+'</option>';
+  h+='</select><select id="winw"><option value="0">она —</option>';
+  for(i=1;i<=N;i++)h+='<option value="'+i+'"'+(ww===i?' selected':'')+'>'+who(c,'w',i)+'</option>';
+  h+='</select><button data-go="'+(g.guest_open?0:1)+'" class="'+(g.guest_open?'on':'')+'">'+(g.guest_open?'Голосование гостей открыто — закрыть':'Закрыто — открыть снова')+'</button></div>';
+  var ok=G.filter(function(x){return !(wm&&x.m===wm)&&!(ww&&x.w===ww);}),gtip;
+  if(!gt)gtip='Гости ещё не голосовали.';
+  else if(!wm||!ww)gtip='Голосов: '+gt+'. Отметьте выше пару-победителя супер-мэтча — её участники будут исключены из приза гостей.';
+  else if(!ok.length)gtip='Все пары гостей пересекаются с победителем — приз по аплодисментам.';
+  else{var top=ok.filter(function(x){return x.n===ok[0].n;});
+    gtip=top.length===1?'Приз гостей: '+who(c,'m',top[0].m)+' + '+who(c,'w',top[0].w)+' — голосов: '+top[0].n+' из '+gt+'.':'Ничья ('+top.length+' пары по '+ok[0].n+' гол.) — решают аплодисменты между ними.';}
+  h+='<div class="hint">'+gtip+'</div>';
+  G.forEach(function(x){var bad=(wm&&x.m===wm)||(ww&&x.w===ww);
+    h+='<div class="pair'+(!bad&&ok.length&&x.n===ok[0].n&&wm&&ww?' s3':'')+'"'+(bad?' style="opacity:.45"':'')+'><span>'+who(c,'m',x.m)+' + '+who(c,'w',x.w)+(bad?' <small>· пересекается с победителем</small>':'')+'</span><span class="sc">'+x.n+' гол.</span></div>';});
   h+='</div><div class="cols">';
   ['m','w'].forEach(function(gg){
     h+='<div class="card"><h2>'+(gg==='m'?'Мужчины':'Женщины')+'</h2>';
@@ -109,12 +126,13 @@ function html(){
   h+='</div><div class="card"><h2>Настройки</h2><div class="btns" style="align-items:center"><span>Пар: <b>'+N+'</b></span><button data-pairs="'+(N-1)+'">−</button><button data-pairs="'+(N+1)+'">+</button><button data-reset="1">Новая игра · стереть всех</button><span class="muted">Кружки 1·2·3 у имени — в каких кругах человек уже сделал выбор. × — освободить номер, если кто-то занял чужой.</span></div></div>';
   return h;
 }
-function render(){var s=html();if(s===last)return;last=s;app.innerHTML=s;}
+function render(){var a=document.activeElement;if(a&&a.tagName==='SELECT')return;var s=html();if(s===last)return;last=s;app.innerHTML=s;}
 function apply(d){if(d&&d.error==='pin'){err='pin';PIN='';}else{err='';D=d;}render();}
 function load(){if(!PIN){render();return;}rpc({}).then(apply).catch(function(){});}
 app.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t)return;
   if(t.id==='go'){PIN=document.getElementById('pin').value.replace(/[^0-9]/g,'');try{sessionStorage.setItem('sd_pin_'+CODE,PIN);}catch(x){}err='';load();return;}
+  if(t.dataset.go!=null){rpc({p_guest_open:t.dataset.go==='1'}).then(apply);return;}
   if(t.dataset.vo!=null){rpc({p_vote_open:+t.dataset.vo}).then(apply);return;}
   if(t.dataset.rev!=null){
     if(t.dataset.rev==='1'&&!confirm('Раскрыть мэтчи всем участникам на телефонах? Выбор после этого закроется.'))return;
@@ -124,6 +142,7 @@ app.addEventListener('click',function(e){
   if(t.dataset.reset){if(!confirm('Стереть всех участников и весь выбор? Делайте это только ПЕРЕД игрой, после репетиции.'))return;rpc({p_reset:true}).then(apply);return;}
   if(t.dataset.kg){if(!confirm('Освободить место '+(t.dataset.kg==='m'?'М':'Ж')+t.dataset.kn+'? Отметки этого участника сотрутся.'))return;rpc({p_kick_g:t.dataset.kg,p_kick_num:+t.dataset.kn}).then(apply);}
 });
+app.addEventListener('change',function(e){if(e.target.tagName==='SELECT')e.target.blur();if(e.target.id==='winm')rpc({p_win_m:+e.target.value}).then(apply);if(e.target.id==='winw')rpc({p_win_w:+e.target.value}).then(apply);});
 app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin')document.getElementById('go').click();});
 load();setInterval(function(){if(!document.hidden)load();},3000);
 })();
