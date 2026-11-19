@@ -106,7 +106,7 @@ function html(){
     }
     h+='</div>';
   });
-  h+='</div><div class="card"><h2>Настройки</h2><div class="btns" style="align-items:center"><span>Пар: <b>'+N+'</b></span><button data-pairs="'+(N-1)+'">−</button><button data-pairs="'+(N+1)+'">+</button><span class="muted">Кружки 1·2·3 у имени — в каких кругах человек уже сделал выбор. × — освободить номер, если кто-то занял чужой.</span></div></div>';
+  h+='</div><div class="card"><h2>Настройки</h2><div class="btns" style="align-items:center"><span>Пар: <b>'+N+'</b></span><button data-pairs="'+(N-1)+'">−</button><button data-pairs="'+(N+1)+'">+</button><button data-reset="1">Новая игра · стереть всех</button><span class="muted">Кружки 1·2·3 у имени — в каких кругах человек уже сделал выбор. × — освободить номер, если кто-то занял чужой.</span></div></div>';
   return h;
 }
 function render(){var s=html();if(s===last)return;last=s;app.innerHTML=s;}
@@ -121,6 +121,7 @@ app.addEventListener('click',function(e){
     rpc({p_revealed:t.dataset.rev==='1'}).then(apply);return;
   }
   if(t.dataset.pairs){if(!confirm('Изменить число пар на '+t.dataset.pairs+'?'))return;rpc({p_pairs:+t.dataset.pairs}).then(apply);return;}
+  if(t.dataset.reset){if(!confirm('Стереть всех участников и весь выбор? Делайте это только ПЕРЕД игрой, после репетиции.'))return;rpc({p_reset:true}).then(apply);return;}
   if(t.dataset.kg){if(!confirm('Освободить место '+(t.dataset.kg==='m'?'М':'Ж')+t.dataset.kn+'? Отметки этого участника сотрутся.'))return;rpc({p_kick_g:t.dataset.kg,p_kick_num:+t.dataset.kn}).then(apply);}
 });
 app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin')document.getElementById('go').click();});
