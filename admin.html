@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Счётчик · Быстрые свидания</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--mag:#A31551;--dark:#4A0221;--sky:#61CFFF;--coral:#FC9385}
+*{box-sizing:border-box}
+body{margin:0;font-family:Montserrat,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:500;color:#fff;background:#2b0114;padding:16px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:22px;font-weight:800;margin:0}
+h2{font-size:15px;font-weight:800;margin:0 0 10px;letter-spacing:.08em;text-transform:uppercase;color:var(--sky)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px;margin-top:14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+button{font:inherit;font-weight:700;font-size:14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:#fff;padding:10px 14px;cursor:pointer}
+button.on{background:var(--sky);color:#2b0114;border-color:var(--sky)}
+button.hot{background:var(--coral);color:#3a0118;border-color:var(--coral)}
+button.x{padding:2px 8px;font-size:12px;border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.p{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.1)}
+.p:first-of-type{border-top:0}
+.tag{font-weight:800;font-size:13px;background:rgba(255,255,255,.14);border-radius:8px;padding:4px 8px;min-width:42px;text-align:center}
+.nm{flex:1;font-weight:600}
+.nm.none{color:rgba(255,255,255,.35);font-weight:500}
+.dots{display:flex;gap:5px}
+.dots i{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);font-style:normal;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)}
+.dots i.ok{background:var(--sky);border-color:var(--sky);color:#2b0114}
+.pair{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;margin-top:8px;background:rgba(255,255,255,.07);font-weight:700}
+.pair.s3{background:#fff;color:var(--dark)}
+.pair.s2{background:rgba(252,147,133,.9);color:#3a0118}
+.pair .sc{margin-left:auto;font-weight:800;white-space:nowrap}
+.pair small{font-weight:600;opacity:.7}
+.hint{background:rgba(97,207,255,.14);border:1px solid var(--sky);border-radius:12px;padding:12px 14px;margin-top:10px;font-weight:600;line-height:1.4}
+.muted{color:rgba(255,255,255,.6);font-size:13px}
+.stat{font-size:14px;font-weight:700}
+input{font:inherit;font-size:18px;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;width:180px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+var SB='https://dxbhhxygngafdlwdcrer.supabase.co',KEY='sb_publishable_gtUpyVchUHYjEgd9ZwDFIA_1dh9APc-';
+var CODE=(new URLSearchParams(location.search).get('g')||'fa6f8f').toLowerCase().replace(/[^a-z0-9]/g,'');
+var PIN=(location.hash||'').replace(/[^0-9]/g,'');
+try{if(PIN)sessionStorage.setItem('sd_pin_'+CODE,PIN);else PIN=sessionStorage.getItem('sd_pin_'+CODE)||'';}catch(e){}
+var app=document.getElementById('app'),D=null,last='',err='';
+function rpc(args){
+  args.p_code=CODE;args.p_pin=PIN;
+  return fetch(SB+'/rest/v1/rpc/sd_admin',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)}).then(function(r){return r.json();});
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function calc(d){
+  var N=d.game.pairs,nm={},v={},pairs=[];
+  d.players.forEach(function(p){nm[p.g+p.num]=p.name;});
+  d.votes.forEach(function(x){v[x.g+x.num+'r'+x.round]=x.picks;});
+  for(var m=1;m<=N;m++)for(var w=1;w<=N;w++){
+    var rs=[];
+    for(var r=1;r<=3;r++){var a=v['m'+m+'r'+r],b=v['w'+w+'r'+r];if(a&&b&&a.indexOf(w)>=0&&b.indexOf(m)>=0)rs.push(r);}
+    if(rs.length)pairs.push({m:m,w:w,rs:rs});
+  }
+  pairs.sort(function(a,b){return b.rs.length-a.rs.length||a.m-b.m||a.w-b.w;});
+  return {N:N,nm:nm,v:v,pairs:pairs};
+}
+function who(c,g,n){return (g==='m'?'М':'Ж')+n+(c.nm[g+n]?' '+esc(c.nm[g+n]):'');}
+function html(){
+  if(!PIN||err==='pin')return '<h1>Счётчик · Быстрые свидания</h1><div class="card"><h2>ПИН-код ведущего</h2><input id="pin" inputmode="numeric" placeholder="ПИН" autofocus> <button id="go" class="on">Войти</button>'+(err==='pin'?'<p class="muted">Неверный ПИН</p>':'')+'</div>';
+  if(!D)return '<h1>Загружаем…</h1>';
+  if(D.error)return '<h1>Игра не найдена</h1>';
+  var g=D.game,c=calc(D),N=c.N,h='',r,i;
+  var joined=D.players.length,cnt=[0,0,0];
+  D.votes.forEach(function(x){cnt[x.round-1]++;});
+  h+='<div class="top"><h1>Счётчик · Быстрые свидания</h1><div class="stat">В игре '+joined+' из '+(2*N)+' · проголосовали: '+cnt.join(' / ')+'</div></div>';
+  h+='<div class="card"><h2>Выбор на телефонах</h2><div class="btns">';
+  h+='<button data-vo="0" class="'+(g.vote_open===0?'on':'')+'">Закрыт</button>';
+  for(r=1;r<=3;r++)h+='<button data-vo="'+r+'" class="'+(g.vote_open===r?'on':'')+'">Открыт круг '+r+' · '+g.hearts[r-1]+' ♥</button>';
+  h+='<button data-rev="'+(g.revealed?0:1)+'" class="'+(g.revealed?'hot':'')+'">'+(g.revealed?'Мэтчи раскрыты — скрыть':'Раскрыть мэтчи участникам')+'</button>';
+  h+='</div><p class="muted">Пульт открывает выбор сам, когда круг закончился. Кнопки — если пульт без интернета. «Раскрыть» — после вручения приза: каждый увидит на телефоне только свои взаимные мэтчи.</p></div>';
+  h+='<div class="card"><h2>Итог · взаимные совпадения</h2>';
+  var s3=c.pairs.filter(function(p){return p.rs.length===3;}),s2=c.pairs.filter(function(p){return p.rs.length===2;});
+  var tip;
+  if(cnt[2]<joined||joined===0)tip='Ждём выбор третьего круга: '+cnt[2]+' из '+joined+'.';
+  else if(s3.length===1)tip='Одна пара «3 из 3» — сразу приз (шаг «Супер-мэтч вечера»).';
+  else if(s3.length>1)tip='Пар «3 из 3»: '+s3.length+' — блиц на синхронность между ними.';
+  else if(s2.length===1)tip='Пар «3 из 3» нет, одна пара «2 из 3» — она и получает приз.';
+  else if(s2.length>1)tip='Пар «3 из 3» нет — блиц среди пар «2 из 3» ('+s2.length+').';
+  else tip='Нет пар «3 из 3» и «2 из 3» — «Пара вечера» по аплодисментам зала.';
+  h+='<div class="hint">'+tip+'</div>';
+  if(!c.pairs.length)h+='<p class="muted">Пока совпадений нет.</p>';
+  c.pairs.forEach(function(p){
+    h+='<div class="pair s'+p.rs.length+'"><span>'+who(c,'m',p.m)+' + '+who(c,'w',p.w)+'</span><span class="sc">'+p.rs.length+' из 3 <small>· круги '+p.rs.join(', ')+'</small></span></div>';
+  });
+  h+='</div><div class="cols">';
+  ['m','w'].forEach(function(gg){
+    h+='<div class="card"><h2>'+(gg==='m'?'Мужчины':'Женщины')+'</h2>';
+    for(i=1;i<=N;i++){
+      var n=c.nm[gg+i];
+      h+='<div class="p"><span class="tag">'+(gg==='m'?'М':'Ж')+i+'</span><span class="nm'+(n?'':' none')+'">'+(n?esc(n):'не вошёл(ла)')+'</span><span class="dots">';
+      for(r=1;r<=3;r++)h+='<i class="'+(c.v[gg+i+'r'+r]?'ok':'')+'">'+r+'</i>';
+      h+='</span>'+(n?'<button class="x" data-kg="'+gg+'" data-kn="'+i+'" title="Освободить место">×</button>':'')+'</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div><div class="card"><h2>Настройки</h2><div class="btns" style="align-items:center"><span>Пар: <b>'+N+'</b></span><button data-pairs="'+(N-1)+'">−</button><button data-pairs="'+(N+1)+'">+</button><span class="muted">Кружки 1·2·3 у имени — в каких кругах человек уже сделал выбор. × — освободить номер, если кто-то занял чужой.</span></div></div>';
+  return h;
+}
+function render(){var s=html();if(s===last)return;last=s;app.innerHTML=s;}
+function apply(d){if(d&&d.error==='pin'){err='pin';PIN='';}else{err='';D=d;}render();}
+function load(){if(!PIN){render();return;}rpc({}).then(apply).catch(function(){});}
+app.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t)return;
+  if(t.id==='go'){PIN=document.getElementById('pin').value.replace(/[^0-9]/g,'');try{sessionStorage.setItem('sd_pin_'+CODE,PIN);}catch(x){}err='';load();return;}
+  if(t.dataset.vo!=null){rpc({p_vote_open:+t.dataset.vo}).then(apply);return;}
+  if(t.dataset.rev!=null){
+    if(t.dataset.rev==='1'&&!confirm('Раскрыть мэтчи всем участникам на телефонах? Выбор после этого закроется.'))return;
+    rpc({p_revealed:t.dataset.rev==='1'}).then(apply);return;
+  }
+  if(t.dataset.pairs){if(!confirm('Изменить число пар на '+t.dataset.pairs+'?'))return;rpc({p_pairs:+t.dataset.pairs}).then(apply);return;}
+  if(t.dataset.kg){if(!confirm('Освободить место '+(t.dataset.kg==='m'?'М':'Ж')+t.dataset.kn+'? Отметки этого участника сотрутся.'))return;rpc({p_kick_g:t.dataset.kg,p_kick_num:+t.dataset.kn}).then(apply);}
+});
+app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin')document.getElementById('go').click();});
+load();setInterval(function(){if(!document.hidden)load();},3000);
+})();
+</script>
+</body>
+</html>

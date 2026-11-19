@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Быстрые свидания</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--mag:#A31551;--dark:#4A0221;--sky:#61CFFF;--coral:#FC9385}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:Montserrat,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:500;color:#fff;
+  background:linear-gradient(160deg,#4A0221 0%,#7a0d3b 55%,#A31551 100%) fixed;
+  padding:max(18px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
+.wrap{max-width:460px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sky)}
+h1{font-size:28px;line-height:1.12;font-weight:800;margin:6px 0 4px}
+h2{font-size:20px;line-height:1.2;font-weight:800;margin:0 0 6px}
+p{margin:6px 0;line-height:1.4;color:rgba(255,255,255,.86);font-size:15px}
+.card{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px;margin-top:14px}
+.row{display:flex;gap:10px}
+.btn{appearance:none;border:0;border-radius:14px;font:inherit;font-weight:700;font-size:16px;padding:15px 14px;width:100%;
+  background:var(--sky);color:#2b0114;cursor:pointer;margin-top:14px}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4)}
+.btn.small{font-size:13px;padding:8px 12px;width:auto;margin:0}
+.pick{flex:1;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);border-radius:14px;padding:16px 8px;
+  color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.pick.on{background:#fff;color:var(--dark);border-color:#fff}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.grid .pick{padding:13px 0}
+.pick:disabled{opacity:.28;text-decoration:line-through}
+label{display:block;font-size:13px;font-weight:700;margin:16px 0 0;color:rgba(255,255,255,.8)}
+input[type=text]{width:100%;margin-top:8px;padding:14px;border-radius:14px;border:1.5px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:17px;font-weight:600;outline:none}
+input[type=text]:focus{border-color:var(--sky)}
+input::placeholder{color:rgba(255,255,255,.45)}
+.person{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:rgba(255,255,255,.09);
+  border:1.5px solid rgba(255,255,255,.2);border-radius:16px;padding:13px 14px;margin-top:9px;color:#fff;font:inherit;cursor:pointer}
+.person .tag{font-weight:800;font-size:14px;background:rgba(255,255,255,.16);border-radius:10px;padding:6px 9px;min-width:46px;text-align:center}
+.person .nm{flex:1;font-weight:700;font-size:17px}
+.person .hrt{width:30px;height:30px;flex:none;opacity:.35}
+.person.on{background:#fff;color:var(--dark);border-color:#fff}
+.person.on .tag{background:var(--mag);color:#fff}
+.person.on .hrt{opacity:1}
+.person.off{opacity:.38}
+.hearts{display:flex;gap:6px;margin:10px 0 2px}
+.hearts svg{width:26px;height:26px}
+.muted{color:rgba(255,255,255,.62);font-size:13px}
+.done{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.14)}
+.done:first-child{border-top:0}
+.done b{font-weight:700}
+.match{background:#fff;color:var(--dark);border-radius:16px;padding:14px 16px;margin-top:10px}
+.match .nm{font-weight:800;font-size:19px}
+.match .lv{font-size:13px;font-weight:600;color:var(--mag);margin-top:3px}
+.match.super{background:linear-gradient(135deg,#fff 0%,#ffe1dc 100%);box-shadow:0 0 0 3px var(--coral)}
+.badge{display:inline-block;background:var(--coral);color:#3a0118;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:8px;padding:4px 8px;margin-bottom:6px}
+.err{background:rgba(252,147,133,.2);border:1px solid var(--coral);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:14px;font-weight:600}
+.link{background:none;border:0;color:rgba(255,255,255,.6);font:inherit;font-size:13px;text-decoration:underline;margin:22px auto 0;display:block;cursor:pointer}
+.off-line{position:fixed;left:0;right:0;bottom:0;background:#000;color:#fff;font-size:12px;text-align:center;padding:6px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="eyebrow">Быстрые свидания</div><h1>Загружаем…</h1></div>
+<div class="off-line" id="offline">Нет связи — пробуем снова…</div>
+<script>
+(function(){
+var SB='https://dxbhhxygngafdlwdcrer.supabase.co',KEY='sb_publishable_gtUpyVchUHYjEgd9ZwDFIA_1dh9APc-';
+var CODE=(new URLSearchParams(location.search).get('g')||'fa6f8f').toLowerCase().replace(/[^a-z0-9]/g,'');
+var RN=['Лёгкий старт','Увлечения','Ценности и будущее'];
+var HEART='<svg class="hrt" viewBox="0 0 24 24"><path fill="#FC9385" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+function tok(){
+  var k='sd_tok_'+CODE,t=null;try{t=localStorage.getItem(k);}catch(e){}
+  if(!t){t=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('t'+Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2));
+    try{localStorage.setItem(k,t);}catch(e){}}
+  return t;
+}
+var TOKEN=tok();
+function rpc(fn,args){
+  return fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})
+    .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();});
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function L(g){return g==='m'?'М':'Ж';}
+function plural(n,a,b,c){var m=n%10,h=n%100;return (m===1&&h!==11)?a:(m>=2&&m<=4&&(h<10||h>=20))?b:c;}
+
+var D=null,ui={g:null,num:null,name:'',err:'',edit:null,picks:null,pickRound:null,busy:false},lastSig='';
+var app=document.getElementById('app');
+
+function activeRound(){
+  if(!D||!D.me||D.game.revealed)return null;
+  if(ui.edit&&ui.edit<=D.game.vote_open)return ui.edit;
+  for(var r=1;r<=D.game.vote_open;r++)if(!D.votes[r])return r;
+  return null;
+}
+function html(){
+  if(!D)return '<div class="eyebrow">Быстрые свидания</div><h1>Загружаем…</h1>';
+  if(D.error==='nogame')return '<div class="eyebrow">Быстрые свидания</div><h1>Игра не найдена</h1><p>Отсканируйте QR-код с экрана ещё раз.</p>';
+  var g=D.game,N=g.pairs,h='',i;
+  if(!D.me){
+    var taken={};(D.taken||[]).forEach(function(t){taken[t.g+t.num]=1;});
+    h='<div class="eyebrow">Быстрые свидания</div><h1>Добро пожаловать</h1><p>Здесь вы отмечаете симпатии. О невзаимных не узнает никто.</p>';
+    h+='<div class="card"><h2>Кто вы?</h2><div class="row"><button class="pick'+(ui.g==='m'?' on':'')+'" data-g="m">Мужчина</button><button class="pick'+(ui.g==='w'?' on':'')+'" data-g="w">Женщина</button></div>';
+    if(ui.g){
+      h+='<label>Ваш номер — '+(ui.g==='m'?'на вашем бейдже (М1, М2…)':'на вашем столе (Ж1, Ж2…)')+'</label><div class="grid">';
+      for(i=1;i<=N;i++)h+='<button class="pick'+(ui.num===i?' on':'')+'" data-num="'+i+'"'+(taken[ui.g+i]?' disabled':'')+'>'+L(ui.g)+i+'</button>';
+      h+='</div><label>Ваше имя</label><input type="text" id="nm" maxlength="24" autocomplete="given-name" placeholder="Как к вам обращаться" value="'+esc(ui.name)+'">';
+    }
+    if(ui.err)h+='<div class="err">'+esc(ui.err)+'</div>';
+    h+='<button class="btn" id="join"'+((ui.g&&ui.num&&!ui.busy)?'':' disabled')+'>Войти в игру</button></div>';
+    return h;
+  }
+  var me=D.me,og=me.g==='m'?'w':'m',hearts=g.hearts||[3,2,1];
+  var head='<div class="eyebrow">Быстрые свидания · '+L(me.g)+me.num+'</div>';
+  if(g.revealed){
+    var M=D.matches||[];
+    h=head+'<h1>'+(M.length?'Ваши мэтчи':'Игра завершена')+'</h1>';
+    if(!M.length)h+='<div class="card"><p>Взаимных совпадений сегодня не случилось — так бывает. Зато вы познакомились с '+N+' '+plural(N,'человеком','людьми','людьми')+': подойдите к тем, с кем было интересно.</p></div>';
+    else{
+      h+='<p>Это взаимно: вы выбрали друг друга.</p>';
+      M.forEach(function(m){
+        var sup=m.rounds.length===3;
+        h+='<div class="match'+(sup?' super':'')+'">'+(sup?'<div class="badge">Супер-мэтч · 3 из 3</div>':'')+'<div class="nm">'+esc(m.name||(L(og)+m.num))+' <span style="opacity:.55;font-weight:700">· '+L(og)+m.num+'</span></div><div class="lv">Совпали: '+m.rounds.map(function(r){return 'круг '+r+' «'+RN[r-1]+'»';}).join(', ')+'</div></div>';
+      });
+    }
+    return h+'<p class="muted" style="margin-top:18px">Спасибо за игру!</p>';
+  }
+  var r=activeRound();
+  if(r){
+    var K=hearts[r-1];
+    if(ui.pickRound!==r){ui.pickRound=r;ui.picks=(D.votes[r]||[]).slice();}
+    var left=K-ui.picks.length;
+    h=head+'<h1>Круг '+r+' · '+RN[r-1]+'</h1><p>Кому отдадите '+(K===1?'своё единственное сердце':'сердца')+'? Можно выбрать <b>не больше '+K+'</b>.</p><div class="hearts">';
+    for(i=0;i<K;i++)h+=HEART.replace('class="hrt"','style="opacity:'+(i<ui.picks.length?1:.25)+'"');
+    h+='</div>';
+    (D.others||[]).forEach(function(o){
+      var on=ui.picks.indexOf(o.num)>=0;
+      h+='<button class="person'+(on?' on':(left<=0?' off':''))+'" data-p="'+o.num+'"><span class="tag">'+L(og)+o.num+'</span><span class="nm">'+esc(o.name||'—')+'</span>'+HEART+'</button>';
+    });
+    if(ui.err)h+='<div class="err">'+esc(ui.err)+'</div>';
+    h+='<button class="btn" id="send"'+(ui.busy?' disabled':'')+'>'+(ui.picks.length?'Отправить выбор · '+ui.picks.length+' из '+K:'Никого не выбираю')+'</button>';
+    if(ui.edit)h+='<button class="btn ghost" id="cancel">Отмена</button>';
+    return h;
+  }
+  ui.pickRound=null;
+  h=head+'<h1>'+esc(me.name)+', вы в игре</h1>';
+  var vo=g.vote_open;
+  h+='<div class="card"><h2>'+(vo>=3?'Выбор сделан':'Общайтесь')+'</h2><p>'+(vo>=3?'Ждём финал: ведущий объявит пары, а ваши взаимные мэтчи появятся здесь.':'После '+(vo===0?'первого':'этого')+' круга здесь откроется выбор. Телефон можно убрать — экран обновится сам.')+'</p></div>';
+  h+='<div class="card"><h2>Сердец с каждым кругом меньше</h2>';
+  for(i=1;i<=3;i++){
+    var v=D.votes[i],txt;
+    if(v)txt=v.length?v.map(function(n){var o=(D.others||[])[n-1];return esc((o&&o.name)||(L(og)+n));}).join(', '):'никого';
+    h+='<div class="done"><div><b>Круг '+i+'</b> · '+hearts[i-1]+' '+plural(hearts[i-1],'сердце','сердца','сердец')+(v?'<div class="muted">Ваш выбор: '+txt+'</div>':'')+'</div>'+(v?'<button class="btn small ghost" data-edit="'+i+'">Изменить</button>':'')+'</div>';
+  }
+  h+='</div><button class="link" id="leave">Это не мой номер — выйти</button>';
+  return h;
+}
+function render(force){
+  var sig=JSON.stringify([D,ui.g,ui.num,ui.err,ui.edit,ui.picks,ui.busy]);
+  if(!force&&sig===lastSig)return;lastSig=sig;
+  var el=document.getElementById('nm'),foc=el&&document.activeElement===el,pos=foc?el.selectionStart:0;
+  if(el)ui.name=el.value;
+  var y=window.scrollY;
+  app.innerHTML=html();
+  window.scrollTo(0,y);
+  el=document.getElementById('nm');
+  if(el){el.addEventListener('input',function(){ui.name=el.value;});if(foc){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}}
+}
+function load(){
+  return rpc('sd_me',{p_code:CODE,p_token:TOKEN}).then(function(d){
+    D=d;document.getElementById('offline').style.display='none';render();
+  }).catch(function(){document.getElementById('offline').style.display='block';});
+}
+app.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t)return;
+  var el=document.getElementById('nm');if(el)ui.name=el.value;
+  if(t.dataset.g){ui.g=t.dataset.g;ui.num=null;ui.err='';render();return;}
+  if(t.dataset.num){ui.num=+t.dataset.num;ui.err='';render();return;}
+  if(t.id==='join'){
+    var nm=ui.name.trim();
+    if(!nm){ui.err='Впишите имя';render();return;}
+    ui.busy=true;ui.err='';render();
+    rpc('sd_join',{p_code:CODE,p_g:ui.g,p_num:ui.num,p_name:nm,p_token:TOKEN}).then(function(d){
+      ui.busy=false;
+      if(d.error==='taken'){ui.err='Этот номер уже занят. Проверьте свой номер или позовите ведущего.';ui.num=null;}
+      else if(d.error)ui.err='Не получилось войти. Попробуйте ещё раз.';
+      return load();
+    }).catch(function(){ui.busy=false;ui.err='Нет связи. Попробуйте ещё раз.';render();});
+    return;
+  }
+  if(t.dataset.p){
+    var n=+t.dataset.p,k=ui.picks.indexOf(n),K=(D.game.hearts||[3,2,1])[ui.pickRound-1];
+    if(k>=0)ui.picks.splice(k,1);
+    else if(ui.picks.length<K)ui.picks.push(n);
+    else if(K===1)ui.picks=[n];
+    else{ui.err='Сердец только '+K+'. Снимите одно, чтобы выбрать другого человека.';render();return;}
+    ui.err='';render();return;
+  }
+  if(t.id==='send'){
+    var r=ui.pickRound;
+    if(!ui.picks.length&&!confirm('Никого не выбрать в этом круге?'))return;
+    ui.busy=true;ui.err='';render();
+    rpc('sd_cast',{p_code:CODE,p_token:TOKEN,p_round:r,p_picks:ui.picks}).then(function(d){
+      ui.busy=false;
+      if(d.error){ui.err=d.error==='closed'?'Выбор уже закрыт.':'Не получилось отправить. Попробуйте ещё раз.';render();return;}
+      ui.edit=null;ui.pickRound=null;return load();
+    }).catch(function(){ui.busy=false;ui.err='Нет связи. Попробуйте ещё раз.';render();});
+    return;
+  }
+  if(t.id==='cancel'){ui.edit=null;ui.pickRound=null;ui.err='';render();return;}
+  if(t.dataset.edit){ui.edit=+t.dataset.edit;ui.pickRound=null;ui.err='';render();window.scrollTo(0,0);return;}
+  if(t.id==='leave'){
+    if(!confirm('Выйти и выбрать другой номер? Ваши отметки сотрутся.'))return;
+    rpc('sd_leave',{p_code:CODE,p_token:TOKEN}).then(function(){ui.g=null;ui.num=null;ui.edit=null;ui.pickRound=null;return load();});
+  }
+});
+load();
+setInterval(function(){if(!document.hidden&&!ui.busy)load();},5000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
+</body>
+</html>
